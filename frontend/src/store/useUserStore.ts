@@ -1,22 +1,32 @@
 import { create } from 'zustand';
 
 interface Wallet {
-    balance: number;
+  balance: number;
+}
+
+interface Holding {
+  symbol: string;
+  quantity: number;
+  averagePrice: number;
 }
 
 interface User {
-    id: string;
-    username: string;
-    wallet: Wallet;
+  id: string;
+  username: string;
+  wallet: Wallet;
+  holdings?: Holding[];
 }
 
 interface UserStore {
-    user: User | null;
-    setUser: (user: User) => void;
+  user: User | null;
+
+  setUser: (user: User) => void;
 }
 
-export const useUserStore = create<UserStore>((set) => ({
+export const useUserStore = create<UserStore>(
+  (set) => ({
     user: null,
 
     setUser: (user) => set({ user }),
-}));
+  }),
+);
