@@ -1,26 +1,49 @@
 import { useEffect, useState } from 'react';
 
 import { useUserStore } from '../store/useUserStore';
+
 import { api } from '../services/api';
 
 import type { Stock } from '../types/stock';
+import type { PortfolioItem } from '../types/portfolio';
 
 import StockCard from '../components/StockCard';
+import PortfolioCard from '../components/PortfolioCard';
 
 export default function DashboardPage() {
     const user = useUserStore((state) => state.user);
 
     const [stocks, setStocks] = useState<Stock[]>([]);
 
+    const [portfolio, setPortfolio] = useState<
+        PortfolioItem[]
+    >([]);
+
     useEffect(() => {
         fetchStocks();
-    }, []);
+
+        if (user?.id) {
+            fetchPortfolio();
+        }
+    }, [user]);
 
     const fetchStocks = async () => {
         try {
             const response = await api.get('/market/stocks');
 
             setStocks(response.data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const fetchPortfolio = async () => {
+        try {
+            const response = await api.get(
+                `/market/portfolio/${user?.id}`,
+            );
+
+            setPortfolio(response.data);
         } catch (error) {
             console.error(error);
         }
@@ -39,6 +62,25 @@ export default function DashboardPage() {
                     ₹ {user?.wallet?.balance?.toLocaleString()}
                 </p>
             </div>
+
+            <h2 className="text-3xl font-bold mb-6">
+                Portfolio
+            </h2>
+
+            {portfolio.length === 0 ? (
+                <p className="text-zinc-400 mb-10">
+                    No holdings yet
+                </p>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-14">
+                    {portfolio.map((item) => (
+                        <PortfolioCard
+                            key={item.symbol}
+                            item={item}
+                        />
+                    ))}
+                </div>
+            )}
 
             <h2 className="text-3xl font-bold mb-6">
                 Available Stocks
