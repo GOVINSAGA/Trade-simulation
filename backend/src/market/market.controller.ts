@@ -3,6 +3,7 @@ import {
     Controller,
     Get,
     Post,
+    Param,
 } from '@nestjs/common';
 
 import { MarketService } from './market.service';
@@ -24,4 +25,11 @@ export class MarketController {
     buyStock(@Body() dto: BuyStockDto) {
         return this.marketService.buyStock(dto);
     }
+
+    @Get('portfolio/:userId')
+    getPortfolio(@Param('userId') userId: string) {
+        return this.marketService.getPortfolio(userId);
+    }
+
+    
 }
