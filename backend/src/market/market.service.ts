@@ -121,4 +121,50 @@ export class MarketService {
 
         return updatedUser;
     }
+
+    async getPortfolio(userId: string) {
+        const holdings =
+            await this.prisma.holding.findMany({
+                where: {
+                    userId,
+                },
+            });
+
+        const portfolio = holdings.map((holding) => {
+            const stock = MOCK_STOCKS.find(
+                (s) => s.symbol === holding.symbol,
+            );
+
+            const currentPrice = stock?.price || 0;
+
+            const investedValue =
+                holding.averagePrice * holding.quantity;
+
+            const currentValue =
+                currentPrice * holding.quantity;
+
+            const profitLoss =
+                currentValue - investedValue;
+
+            return {
+                symbol: holding.symbol,
+
+                quantity: holding.quantity,
+
+                averagePrice: holding.averagePrice,
+
+                currentPrice,
+
+                investedValue,
+
+                currentValue,
+
+                profitLoss,
+            };
+        });
+
+        return portfolio;
+    }
+
+
 }
