@@ -5,44 +5,64 @@ import {
 
 import { PrismaService } from '../prisma/prisma.service';
 
-import { MOCK_STOCKS } from './mock-stocks';
-
 import { BuyStockDto } from './dto/buy-stock.dto';
-
 import { SellStockDto } from './dto/sell-stock.dto';
 
+import { fetchNifty50Stocks } from './dhan.service';
+import { findStockBySymbol } from './stock-helper';
 
 @Injectable()
 export class MarketService {
-    constructor(private prisma: PrismaService,
-    ) { }
+    constructor(private prisma: PrismaService) { }
 
-    getStocks() {
-        return MOCK_STOCKS;
+    async getStocks() {
+        const stocks =
+            await fetchNifty50Stocks();
+
+        return stocks.map((stock: any) => ({
+            symbol: stock.Sym,
+            name: stock.DispSym,
+            price: Number(stock.Ltp),
+            marketCap: stock.Mcap,
+            pe: stock.Pe,
+            sector: stock.Sector,
+            volume: stock.Volume,
+        }));
     }
 
     async buyStock(dto: BuyStockDto) {
-        const stock = MOCK_STOCKS.find(
-            (s) => s.symbol === dto.symbol,
-        );
+        const stockData =
+            await findStockBySymbol(dto.symbol);
 
-        if (!stock) {
-            throw new BadRequestException('Stock not found');
+        if (!stockData) {
+            throw new BadRequestException(
+                'Stock not found',
+            );
         }
 
-        const totalCost = stock.price * dto.quantity;
+        const stock = {
+            symbol: stockData.Sym,
+            name: stockData.DispSym,
+            price: Number(stockData.Ltp),
+        };
 
-        const user = await this.prisma.user.findUnique({
-            where: {
-                id: dto.userId,
-            },
-            include: {
-                wallet: true,
-            },
-        });
+        const totalCost =
+            stock.price * dto.quantity;
+
+        const user =
+            await this.prisma.user.findUnique({
+                where: {
+                    id: dto.userId,
+                },
+                include: {
+                    wallet: true,
+                },
+            });
 
         if (!user || !user.wallet) {
-            throw new BadRequestException('User not found');
+            throw new BadRequestException(
+                'User not found',
+            );
         }
 
         if (user.wallet.balance < totalCost) {
@@ -72,7 +92,8 @@ export class MarketService {
 
         if (existingHolding) {
             const totalQuantity =
-                existingHolding.quantity + dto.quantity;
+                existingHolding.quantity +
+                dto.quantity;
 
             const totalValue =
                 existingHolding.averagePrice *
@@ -112,72 +133,32 @@ export class MarketService {
             },
         });
 
-        const updatedUser =
-            await this.prisma.user.findUnique({
-                where: {
-                    id: user.id,
-                },
-                include: {
-                    wallet: true,
-                    holdings: true,
-                },
-            });
-
-        return updatedUser;
-    }
-
-    async getPortfolio(userId: string) {
-        const holdings =
-            await this.prisma.holding.findMany({
-                where: {
-                    userId,
-                },
-            });
-
-        const portfolio = holdings.map((holding) => {
-            const stock = MOCK_STOCKS.find(
-                (s) => s.symbol === holding.symbol,
-            );
-
-            const currentPrice = stock?.price || 0;
-
-            const investedValue =
-                holding.averagePrice * holding.quantity;
-
-            const currentValue =
-                currentPrice * holding.quantity;
-
-            const profitLoss =
-                currentValue - investedValue;
-
-            return {
-                symbol: holding.symbol,
-
-                quantity: holding.quantity,
-
-                averagePrice: holding.averagePrice,
-
-                currentPrice,
-
-                investedValue,
-
-                currentValue,
-
-                profitLoss,
-            };
+        return this.prisma.user.findUnique({
+            where: {
+                id: user.id,
+            },
+            include: {
+                wallet: true,
+                holdings: true,
+            },
         });
-
-        return portfolio;
     }
 
     async sellStock(dto: SellStockDto) {
-        const stock = MOCK_STOCKS.find(
-            (s) => s.symbol === dto.symbol,
-        );
+        const stockData =
+            await findStockBySymbol(dto.symbol);
 
-        if (!stock) {
-            throw new BadRequestException('Stock not found');
+        if (!stockData) {
+            throw new BadRequestException(
+                'Stock not found',
+            );
         }
+
+        const stock = {
+            symbol: stockData.Sym,
+            name: stockData.DispSym,
+            price: Number(stockData.Ltp),
+        };
 
         const holding =
             await this.prisma.holding.findFirst({
@@ -199,7 +180,8 @@ export class MarketService {
             );
         }
 
-        const totalValue = stock.price * dto.quantity;
+        const totalValue =
+            stock.price * dto.quantity;
 
         await this.prisma.wallet.update({
             where: {
@@ -253,5 +235,52 @@ export class MarketService {
         });
     }
 
+    async getPortfolio(userId: string) {
+        const holdings =
+            await this.prisma.holding.findMany({
+                where: {
+                    userId,
+                },
+            });
 
+        const stocks =
+            await fetchNifty50Stocks();
+
+        const portfolio = holdings.map(
+            (holding) => {
+                const stock = stocks.find(
+                    (s: any) =>
+                        s.Sym === holding.symbol,
+                );
+
+                const currentPrice = Number(
+                    stock?.Ltp || 0,
+                );
+
+                const investedValue =
+                    holding.averagePrice *
+                    holding.quantity;
+
+                const currentValue =
+                    currentPrice *
+                    holding.quantity;
+
+                const profitLoss =
+                    currentValue - investedValue;
+
+                return {
+                    symbol: holding.symbol,
+                    quantity: holding.quantity,
+                    averagePrice:
+                        holding.averagePrice,
+                    currentPrice,
+                    investedValue,
+                    currentValue,
+                    profitLoss,
+                };
+            },
+        );
+
+        return portfolio;
+    }
 }
