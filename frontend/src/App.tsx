@@ -12,8 +12,12 @@ import ExplorePage from './pages/ExplorePage';
 import HoldingsPage from './pages/HoldingsPage';
 import TransactionsPage from './pages/TransactionsPage';
 
+import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
+
+
+
   return (
     <BrowserRouter>
       <Routes>
@@ -25,12 +29,19 @@ export default function App() {
         <Route element={<AppLayout />}>
           <Route
             path="/explore"
-            element={<ExplorePage />}
+            element={
+              <ProtectedRoute>
+                <ExplorePage />
+              </ProtectedRoute>
+            }
           />
 
           <Route
             path="/holdings"
-            element={<HoldingsPage />}
+            element={
+              <ProtectedRoute>
+                <HoldingsPage />
+              </ProtectedRoute>}
           />
 
           <Route
@@ -42,7 +53,10 @@ export default function App() {
 
           <Route
             path="/transactions"
-            element={<TransactionsPage />}
+            element={<ProtectedRoute>
+              <TransactionsPage />
+            </ProtectedRoute>
+            }
           />
 
 

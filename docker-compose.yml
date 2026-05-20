@@ -1,18 +1,64 @@
-version: '3.9'
-
 services:
   postgres:
-    image: postgres:16
+    image: postgres:17-alpine
+
     container_name: tradesim-postgres
+
     restart: always
+
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: tradesim
+
     ports:
       - "5432:5432"
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+    networks:
+      - tradesim-network
+
+  backend:
+    build:
+      context: ./backend
+
+    container_name: tradesim-backend
+
+    restart: always
+
+    depends_on:
+      - postgres
+
+    env_file:
+      - ./backend/.env.docker
+
+    ports:
+      - "3000:3000"
+
+    networks:
+      - tradesim-network
+
+  frontend:
+    build:
+      context: ./frontend
+
+    container_name: tradesim-frontend
+
+    restart: always
+
+    depends_on:
+      - backend
+
+    ports:
+      - "80:80"
+
+    networks:
+      - tradesim-network
+
 volumes:
   postgres_data:
+
+networks:
+  tradesim-network:

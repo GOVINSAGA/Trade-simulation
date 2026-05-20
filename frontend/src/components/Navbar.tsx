@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import ProfileMenu from './ProfileMenu';
 
 export default function Navbar() {
     const navClass = ({ isActive }: any) =>
@@ -37,6 +38,8 @@ export default function Navbar() {
                     </NavLink>
                 </div>
             </div>
+
+            <ProfileMenu />
         </nav>
     );
 }

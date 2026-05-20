@@ -21,12 +21,29 @@ interface UserStore {
   user: User | null;
 
   setUser: (user: User) => void;
+
+  clearUser: () => void;
 }
+
+const storedUser =
+  localStorage.getItem(
+    'simulation-user',
+  );
 
 export const useUserStore = create<UserStore>(
   (set) => ({
-    user: null,
+    user: storedUser
+      ? JSON.parse(storedUser)
+      : null,
 
-    setUser: (user) => set({ user }),
+    setUser: (user) =>
+      set({
+        user,
+      }),
+
+    clearUser: () =>
+      set({
+        user: null,
+      }),
   }),
 );
