@@ -31,7 +31,7 @@ export default function HomePage() {
             );
 
             // alert('Simulation Started');
-            navigate('/dashboard');
+            navigate('/explore');
         } catch (error) {
             console.error(error);
             alert('Something went wrong');

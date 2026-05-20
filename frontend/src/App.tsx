@@ -1,34 +1,44 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { useEffect } from 'react';
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+} from 'react-router-dom';
+
+import AppLayout from './layouts/AppLayout';
 
 import HomePage from './pages/HomePage';
-import DashboardPage from './pages/DashboardPage';
+import ExplorePage from './pages/ExplorePage';
+import HoldingsPage from './pages/HoldingsPage';
 
-import { useUserStore } from './store/useUserStore';
-
-function App() {
-  const setUser = useUserStore((state) => state.setUser);
-
-  useEffect(() => {
-    const savedUser = localStorage.getItem('simulation-user');
-
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-  }, []);
-
+export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<HomePage />} />
-
         <Route
-          path="/dashboard"
-          element={<DashboardPage />}
+          path="/"
+          element={<HomePage />}
         />
+
+        <Route element={<AppLayout />}>
+          <Route
+            path="/explore"
+            element={<ExplorePage />}
+          />
+
+          <Route
+            path="/holdings"
+            element={<HoldingsPage />}
+          />
+
+          <Route
+            path="/dashboard"
+            element={
+              <Navigate to="/explore" />
+            }
+          />
+        </Route>
       </Routes>
     </BrowserRouter>
   );
 }
-
-export default App;
