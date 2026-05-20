@@ -9,6 +9,7 @@ import {
 import { MarketService } from './market.service';
 
 import { BuyStockDto } from './dto/buy-stock.dto';
+import { SellStockDto } from './dto/sell-stock.dto';
 
 @Controller('market')
 export class MarketController {
@@ -31,5 +32,11 @@ export class MarketController {
         return this.marketService.getPortfolio(userId);
     }
 
-    
+    @Post('sell')
+    sellStock(@Body() dto: SellStockDto) {
+        return this.marketService.sellStock(dto);
+    }
+
+   
+
 }

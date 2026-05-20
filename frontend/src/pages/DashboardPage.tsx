@@ -77,6 +77,7 @@ export default function DashboardPage() {
                         <PortfolioCard
                             key={item.symbol}
                             item={item}
+                            refreshPortfolio={fetchPortfolio}
                         />
                     ))}
                 </div>
@@ -91,6 +92,7 @@ export default function DashboardPage() {
                     <StockCard
                         key={stock.symbol}
                         stock={stock}
+                        refreshPortfolio={fetchPortfolio}
                     />
                 ))}
             </div>

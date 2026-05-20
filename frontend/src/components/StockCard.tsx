@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import { api } from '../services/api';
 
 import { useUserStore } from '../store/useUserStore';
@@ -6,10 +8,13 @@ import type { Stock } from '../types/stock';
 
 interface Props {
     stock: Stock;
+
+    refreshPortfolio: () => void;
 }
 
 export default function StockCard({
     stock,
+    refreshPortfolio,
 }: Props) {
     const user = useUserStore((state) => state.user);
 
@@ -17,16 +22,22 @@ export default function StockCard({
         (state) => state.setUser,
     );
 
+    const [quantity, setQuantity] = useState(1);
+
+    const [loading, setLoading] = useState(false);
+
     const handleBuy = async () => {
         if (!user) return;
 
         try {
+            setLoading(true);
+
             const response = await api.post(
                 '/market/buy',
                 {
                     userId: user.id,
                     symbol: stock.symbol,
-                    quantity: 1,
+                    quantity,
                 },
             );
 
@@ -37,12 +48,18 @@ export default function StockCard({
                 JSON.stringify(response.data),
             );
 
-            alert(`Bought 1 share of ${stock.symbol}`);
+            refreshPortfolio();
+
+            alert(
+                `Bought ${quantity} share(s) of ${stock.symbol}`,
+            );
         } catch (error: any) {
             alert(
                 error?.response?.data?.message ||
                 'Purchase failed',
             );
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -60,11 +77,22 @@ export default function StockCard({
                 ₹ {stock.price.toLocaleString()}
             </p>
 
+            <input
+                type="number"
+                min={1}
+                value={quantity}
+                onChange={(e) =>
+                    setQuantity(Number(e.target.value))
+                }
+                className="w-full mb-4 p-2 rounded-lg bg-zinc-800 border border-zinc-700"
+            />
+
             <button
                 onClick={handleBuy}
-                className="bg-white text-black px-4 py-2 rounded-lg font-semibold"
+                disabled={loading}
+                className="bg-white text-black px-4 py-2 rounded-lg font-semibold w-full"
             >
-                Buy
+                {loading ? 'Buying...' : 'Buy'}
             </button>
         </div>
     );
