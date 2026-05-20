@@ -47,6 +47,8 @@ export default function PortfolioSummary({
                     ₹ {profitLoss.toLocaleString()}
                 </h2>
             </div>
+
+            
         </div>
     );
 }

@@ -10,6 +10,8 @@ import AppLayout from './layouts/AppLayout';
 import HomePage from './pages/HomePage';
 import ExplorePage from './pages/ExplorePage';
 import HoldingsPage from './pages/HoldingsPage';
+import TransactionsPage from './pages/TransactionsPage';
+
 
 export default function App() {
   return (
@@ -37,6 +39,13 @@ export default function App() {
               <Navigate to="/explore" />
             }
           />
+
+          <Route
+            path="/transactions"
+            element={<TransactionsPage />}
+          />
+
+
         </Route>
       </Routes>
     </BrowserRouter>

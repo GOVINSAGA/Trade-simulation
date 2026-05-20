@@ -15,6 +15,12 @@ export default function HoldingsPage() {
 
     useEffect(() => {
         fetchPortfolio();
+
+        const interval = setInterval(() => {
+            fetchPortfolio();
+        }, 30000);
+
+        return () => clearInterval(interval);
     }, []);
 
     const fetchPortfolio = async () => {
@@ -26,6 +32,35 @@ export default function HoldingsPage() {
             setPortfolio(response.data);
         } catch (error) {
             console.error(error);
+        }
+    };
+
+    const handleSell = async (
+        symbol: string,
+    ) => {
+        try {
+            const response = await api.post(
+                '/market/sell',
+                {
+                    userId: user?.id,
+                    symbol,
+                    quantity: 1,
+                },
+            );
+
+            localStorage.setItem(
+                'simulation-user',
+                JSON.stringify(response.data),
+            );
+
+            fetchPortfolio();
+
+            alert(`Sold 1 share of ${symbol}`);
+        } catch (error: any) {
+            alert(
+                error?.response?.data?.message ||
+                'Sell failed',
+            );
         }
     };
 
@@ -76,11 +111,21 @@ export default function HoldingsPage() {
 
                     <h2
                         className={`text-3xl font-bold ${totalPL >= 0
-                                ? 'text-green-400'
-                                : 'text-red-400'
+                            ? 'text-green-400'
+                            : 'text-red-400'
                             }`}
                     >
                         ₹ {totalPL.toLocaleString()}
+                    </h2>
+                </div>
+
+                <div className="bg-zinc-900 p-6 rounded-2xl">
+                    <p className="text-zinc-400 mb-2">
+                        Holdings
+                    </p>
+
+                    <h2 className="text-3xl font-bold">
+                        {portfolio.length}
                     </h2>
                 </div>
             </div>
@@ -115,6 +160,9 @@ export default function HoldingsPage() {
 
                             <th className="text-left p-4">
                                 P/L
+                            </th>
+                            <th className="text-left p-4">
+                                Allocation
                             </th>
                         </tr>
                     </thead>
@@ -155,12 +203,32 @@ export default function HoldingsPage() {
 
                                 <td
                                     className={`p-4 font-bold ${item.profitLoss >= 0
-                                            ? 'text-green-400'
-                                            : 'text-red-400'
+                                        ? 'text-green-400'
+                                        : 'text-red-400'
                                         }`}
                                 >
                                     ₹{' '}
                                     {item.profitLoss.toLocaleString()}
+                                </td>
+
+                                <td className="p-4">
+                                    {(
+                                        (item.currentValue /
+                                            currentValue) *
+                                        100
+                                    ).toFixed(2)}
+                                    %
+                                </td>
+
+                                <td className="p-4">
+                                    <button
+                                        onClick={() =>
+                                            handleSell(item.symbol)
+                                        }
+                                        className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg"
+                                    >
+                                        Sell
+                                    </button>
                                 </td>
                             </tr>
                         ))}

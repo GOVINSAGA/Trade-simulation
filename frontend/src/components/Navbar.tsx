@@ -28,6 +28,13 @@ export default function Navbar() {
                     >
                         Holdings
                     </NavLink>
+
+                    <NavLink
+                        to="/transactions"
+                        className={navClass}
+                    >
+                        Transactions
+                    </NavLink>
                 </div>
             </div>
         </nav>

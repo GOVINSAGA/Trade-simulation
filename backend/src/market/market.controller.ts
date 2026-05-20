@@ -40,4 +40,13 @@ export class MarketController {
             userId,
         );
     }
+
+    @Get('transactions/:userId')
+    getTransactions(
+        @Param('userId') userId: string,
+    ) {
+        return this.marketService.getTransactions(
+            userId,
+        );
+    }
 }

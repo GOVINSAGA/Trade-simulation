@@ -290,5 +290,16 @@ export class MarketService {
         return portfolio;
     }
 
+    async getTransactions(userId: string) {
+        return this.prisma.trade.findMany({
+            where: {
+                userId,
+            },
+
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+    }
 
 }
