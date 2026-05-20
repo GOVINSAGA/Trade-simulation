@@ -45,3 +45,19 @@ model Trade {
   userId String
   user   User @relation(fields: [userId], references: [id])
 }
+
+model Stock {
+  id        String   @id @default(uuid())
+
+  symbol    String   @unique
+  name      String
+
+  price     Float
+
+  marketCap Float?
+  pe        Float?
+  sector    String?
+  volume    Float?
+
+  updatedAt DateTime @updatedAt
+}

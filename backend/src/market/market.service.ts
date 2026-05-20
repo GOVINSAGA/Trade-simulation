@@ -9,30 +9,32 @@ import { BuyStockDto } from './dto/buy-stock.dto';
 import { SellStockDto } from './dto/sell-stock.dto';
 
 import { fetchNifty50Stocks } from './dhan.service';
-import { findStockBySymbol } from './stock-helper';
 
 @Injectable()
 export class MarketService {
     constructor(private prisma: PrismaService) { }
 
-    async getStocks() {
-        const stocks =
-            await fetchNifty50Stocks();
+    private async findStockBySymbol(
+        symbol: string,
+    ) {
+        return this.prisma.stock.findUnique({
+            where: {
+                symbol,
+            },
+        });
+    }
 
-        return stocks.map((stock: any) => ({
-            symbol: stock.Sym,
-            name: stock.DispSym,
-            price: Number(stock.Ltp),
-            marketCap: stock.Mcap,
-            pe: stock.Pe,
-            sector: stock.Sector,
-            volume: stock.Volume,
-        }));
+    async getStocks() {
+        return this.prisma.stock.findMany({
+            orderBy: {
+                marketCap: 'desc',
+            },
+        });
     }
 
     async buyStock(dto: BuyStockDto) {
         const stockData =
-            await findStockBySymbol(dto.symbol);
+            await this.findStockBySymbol(dto.symbol);
 
         if (!stockData) {
             throw new BadRequestException(
@@ -41,9 +43,9 @@ export class MarketService {
         }
 
         const stock = {
-            symbol: stockData.Sym,
-            name: stockData.DispSym,
-            price: Number(stockData.Ltp),
+            symbol: stockData.symbol,
+            name: stockData.name,
+            price: Number(stockData.price),
         };
 
         const totalCost =
@@ -146,7 +148,7 @@ export class MarketService {
 
     async sellStock(dto: SellStockDto) {
         const stockData =
-            await findStockBySymbol(dto.symbol);
+            await this.findStockBySymbol(dto.symbol);
 
         if (!stockData) {
             throw new BadRequestException(
@@ -155,9 +157,9 @@ export class MarketService {
         }
 
         const stock = {
-            symbol: stockData.Sym,
-            name: stockData.DispSym,
-            price: Number(stockData.Ltp),
+            symbol: stockData.symbol,
+            name: stockData.name,
+            price: Number(stockData.price),
         };
 
         const holding =
@@ -243,19 +245,17 @@ export class MarketService {
                 },
             });
 
-        const stocks =
-            await fetchNifty50Stocks();
+        const portfolio = await Promise.all(
+            holdings.map(async (holding) => {
+                const stock =
+                    await this.prisma.stock.findUnique({
+                        where: {
+                            symbol: holding.symbol,
+                        },
+                    });
 
-        const portfolio = holdings.map(
-            (holding) => {
-                const stock = stocks.find(
-                    (s: any) =>
-                        s.Sym === holding.symbol,
-                );
-
-                const currentPrice = Number(
-                    stock?.Ltp || 0,
-                );
+                const currentPrice =
+                    stock?.price || 0;
 
                 const investedValue =
                     holding.averagePrice *
@@ -270,17 +270,25 @@ export class MarketService {
 
                 return {
                     symbol: holding.symbol,
+
                     quantity: holding.quantity,
+
                     averagePrice:
                         holding.averagePrice,
+
                     currentPrice,
+
                     investedValue,
+
                     currentValue,
+
                     profitLoss,
                 };
-            },
+            }),
         );
 
         return portfolio;
     }
+
+
 }
